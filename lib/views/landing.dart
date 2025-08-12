@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gpt_web/constants/constants.dart';
 import 'package:gpt_web/views/components/gradienttext.dart';
 import 'package:gpt_web/views/home.dart';
+import 'package:gpt_web/views/register.dart';
 
 class LandingView extends StatefulWidget {
   const LandingView({super.key});
@@ -13,7 +14,8 @@ class LandingView extends StatefulWidget {
 }
 
 class _LandingViewState extends State<LandingView> {
-  TextEditingController usercon = TextEditingController();
+  TextEditingController emailcon = TextEditingController();
+  TextEditingController passwordcon = TextEditingController();
 
   final gptusers = FirebaseFirestore.instance.collection('gptusers');
 
@@ -53,13 +55,13 @@ class _LandingViewState extends State<LandingView> {
             height: 50,
           ),
           const Text(
-            'Add your  Username',
+            'Email',
             style: TextStyle(color: white, fontSize: 20),
           ),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.4),
             child: TextField(
-              controller: usercon,
+              controller: emailcon,
               style: TextStyle(color: white),
               onChanged: (value) {
                 setState(() {
@@ -71,24 +73,77 @@ class _LandingViewState extends State<LandingView> {
           SizedBox(
             height: 20,
           ),
-          usercon.text.isEmpty
+          const Text(
+            'Password',
+            style: TextStyle(color: white, fontSize: 20),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.4),
+            child: TextField(
+              controller: passwordcon,
+              style: TextStyle(color: white),
+              onChanged: (value) {
+                setState(() {
+                  
+                });
+              },
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          emailcon.text.isEmpty && passwordcon.text.isEmpty
             ? SizedBox()
             : ElevatedButton(
-              child: Text('Submit'),
+              style: ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(torquiseT)
+              ),
+              child: Text('Login'),
               onPressed: () async {
                 setState(() {
                   loading = true;
                 });
-                await FirebaseAuth.instance.signInAnonymously();
-                // await FirebaseAuth.instance.;
-                await gptusers.doc(FirebaseAuth.instance.currentUser?.uid).set({
-                  'user': usercon.text
-                }).whenComplete(() {
-                  loading = false;
-                  if(context.mounted){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomeView(user: usercon.text),));
+                try {
+                  var user = await FirebaseAuth.instance.signInWithEmailAndPassword(email: emailcon.text, password: passwordcon.text);
+                  if(user.user != null) {
+                    if(context.mounted){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => HomeView(user: emailcon.text),));
+                    }
+                  } else {
+                    if(context.mounted) {
+
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Email not verified")));
+                    }
+                    setState(() {
+                      loading = false;
+                    });
                   }
-                });
+                } on FirebaseAuthException  catch (e) {
+                  setState(() {
+                    loading = false;
+                  });
+                  if (e.code == 'user-not-found') {
+                    if(context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No user found for that email.')));
+                    }
+                  } else if (e.code == 'wrong-password') {
+                    if(context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Wrong password provided for that user.')));
+                    }
+                  }
+                }
+              }
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(torquiseT)
+              ),
+              child: Text('Register', style: TextStyle(color: white),),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage(),));
               }
             )
         ],

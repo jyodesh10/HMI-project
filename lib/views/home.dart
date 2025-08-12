@@ -241,7 +241,7 @@ class _HomeViewState extends State<HomeView> {
                                               MainAxisAlignment.center,
                                           children: [
                                             GradientText(
-                                              "Hello, ${widget.user}",
+                                              "Hello, ${widget.user.split("@").first}",
                                               style: TextStyle(
                                                 fontSize: 60,
                                                 fontWeight: FontWeight.w900,
@@ -399,6 +399,10 @@ class _HomeViewState extends State<HomeView> {
                                     margin: EdgeInsets.symmetric(
                                       vertical: deviceHeight * .2,
                                       horizontal: deviceWidth * .3,
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 60,
+                                      vertical: 60
                                     ),
                                     decoration: BoxDecoration(
                                       color: backgroundClrLight,
