@@ -64,6 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: TextField(
               controller: passwordcon,
               style: TextStyle(color: white),
+              obscureText: true,
               onChanged: (value) {
                 setState(() {
                   
