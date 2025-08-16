@@ -1,6 +1,6 @@
-# gpt_web
+# HMI project.
 
-A Flutter web application that interacts with the Gemini API.
+Topic : How do prompt revision and assisted feedback mechanisms influence in improving output across diverse LLM-supported tasks?
 
 
 ## Features

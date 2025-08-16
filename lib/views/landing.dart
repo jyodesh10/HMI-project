@@ -39,7 +39,7 @@ class _LandingViewState extends State<LandingView> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GradientText(
-            "GPT Web",
+            "HMI Project",
             style: TextStyle(
               fontSize: 60,
               fontWeight: FontWeight.w900,
@@ -51,6 +51,10 @@ class _LandingViewState extends State<LandingView> {
               stops: [0.0, 1.0],
             ),
           ),
+          SizedBox(
+            height: 10,
+          ),
+          Text('''Topic : How do prompt revision and assisted feedback mechanisms influence \nin improving output across diverse LLM-supported tasks?''', style: TextStyle(color: white.withAlpha(200)), textAlign: TextAlign.center,),
           SizedBox(
             height: 50,
           ),
@@ -137,6 +141,10 @@ class _LandingViewState extends State<LandingView> {
             ),
             SizedBox(
               height: 20,
+            ),
+            Text('Don\'t have an account?', style: TextStyle(color: white),),
+            SizedBox(
+              height: 6,
             ),
             ElevatedButton(
               style: ButtonStyle(
