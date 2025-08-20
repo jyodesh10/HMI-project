@@ -34,8 +34,11 @@ class _HomeViewState extends State<HomeView> {
   String currentUser = "";
   Timer? debounceTimer; // Declare a Timer variable
   final Duration debounceDuration = Duration(milliseconds: 500);
+  List<String> llms = ["Gemini", "Cohere"];
+  String selectedLlm = "Gemini";
 
-  runPrompt(val) async {
+
+  runPromptGemini(val) async {
     setState(() {
       loading = true;
     });
@@ -50,6 +53,30 @@ class _HomeViewState extends State<HomeView> {
       "id": historyId,
       "prompt": history.last['prompt'],
       "output": history.last['output'],
+      "selectedLLm": selectedLlm,
+      "rating": 0.0,
+    });
+    Future.delayed(Duration(milliseconds: 2), () {
+      scrollController.animateTo(scrollController.position.maxScrollExtent, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
+    });
+  }
+
+  runPromptCohere(val) async {
+    setState(() {
+      loading = true;
+    });
+    output = await ApiRepo().cohereApiPost(val);
+    String historyId = FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc().id;
+    history.add({'id': historyId, 'prompt': val, 'output': output, 'rating':0.0});
+    setState(() {
+      loading = false;
+    });
+    prompt.clear();
+    FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc(historyId).set({
+      "id": historyId,
+      "prompt": history.last['prompt'],
+      "output": history.last['output'],
+      "selectedLLm": selectedLlm,
       "rating": 0.0,
     });
     Future.delayed(Duration(milliseconds: 2), () {
@@ -67,7 +94,11 @@ class _HomeViewState extends State<HomeView> {
   // Action handler for submitting the prompt
   void _handleSubmitIntent() {
     if (prompt.text.trim().isNotEmpty) {
-      runPrompt(prompt.text);
+      if(selectedLlm == "Gemini") {
+        runPromptGemini(prompt.text);
+      } else {
+        runPromptCohere(prompt.text);
+      }
       // Optionally, you might want to clear the prompt after submission:
       // prompt.clear();
     }
@@ -365,7 +396,11 @@ class _HomeViewState extends State<HomeView> {
                                           suffixIcon: IconButton(
                                             onPressed: () {
                                               if (prompt.text.trim().isNotEmpty) {
-                                                runPrompt(prompt.text);
+                                                if(selectedLlm == "Gemini") {
+                                                  runPromptGemini(prompt.text);
+                                                } else {
+                                                  runPromptCohere(prompt.text);
+                                                }
                                               }
                                             },
                                             icon: Icon(Icons.search, color: white),
@@ -426,33 +461,33 @@ class _HomeViewState extends State<HomeView> {
                         ),
                       ),
                     ),
-                    // Padding(
-                    //   padding: EdgeInsetsGeometry.only(top: deviceHeight*0.6, right: deviceWidth * 0.6),
-                    //   child: Container(
-                    //     // height: 50,
-                    //     width: 250,
-                    //     // color: white,
-                    //     child: Column(
-                    //       children: [
-                    //         ExpansionTile(
-                    //           title: Text("Suggestions", style: TextStyle(color: white, fontSize: 15),),
-                    //           children: [
-                    //             Wrap(
-                    //               children: [
-                    //                 Chip(label: Text("Lorem")),
-                    //                 Chip(label: Text("Lorem")),
-                    //                 Chip(label: Text("Lorem")),
-                    //                 Chip(label: Text("Lorem")),
-                    //                 Chip(label: Text("Lorem")),
-                    //                 Chip(label: Text("Lorem")),
-                    //               ],
-                    //             )
-                    //           ],
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // )
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      // padding: EdgeInsets.all(20.0),
+                      child: PopupMenuButton(
+                        child: Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.purple,
+                            borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: Text("Select LLM : $selectedLlm", style: TextStyle(fontSize: 15, color: white, fontWeight: FontWeight.w500),)),
+                          itemBuilder: (context) {
+                            return llms.map((e) => 
+                              PopupMenuItem(
+                                child: Text(e),
+                                onTap: () {
+                                  setState(() {
+                                    debugPrint(e);
+                                    selectedLlm = e.toString();
+                                  });
+                                },
+                              ),
+                            ).toList();
+                          },
+                      )
+                    ),
                   ],
                 ),
               ),
