@@ -201,6 +201,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           'age': agecon.text,
                           'occupation': occupationcon.text,
                           'experience': expcon.text,
+                          "date": DateTime.now()
                         }).whenComplete(() {
                           setState(() {
                             loading = false;

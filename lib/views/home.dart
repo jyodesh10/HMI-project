@@ -76,6 +76,7 @@ class _HomeViewState extends State<HomeView> {
       "output": history.last['output'],
       "selectedLLm": selectedLlm,
       "rating": 0.0,
+      "date": DateTime.now()
 
     });
 
@@ -124,7 +125,7 @@ class _HomeViewState extends State<HomeView> {
       "output": history.last['output'],
       "selectedLLm": selectedLlm,
       "rating": 0.0,
-
+      "date": DateTime.now()
     });
 
     log(content.toString());

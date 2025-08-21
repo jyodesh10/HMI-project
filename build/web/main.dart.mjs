@@ -5029,6 +5029,7 @@ class CompiledApp {
 "age",
 "occupation",
 "experience",
+"date",
 "A document path must be a non-empty string",
 "A document path must not contain \"//\"",
 "A document path must point to a valid document",
