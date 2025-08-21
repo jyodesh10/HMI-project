@@ -24,6 +24,7 @@ class _LandingViewState extends State<LandingView> {
 
   @override
   Widget build(BuildContext context) {
+    final deviceWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: backgroundClr,
       body: loading == true
@@ -58,40 +59,45 @@ class _LandingViewState extends State<LandingView> {
           SizedBox(
             height: 50,
           ),
-          const Text(
-            'Email',
-            style: TextStyle(color: white, fontSize: 20),
-          ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.4),
-            child: TextField(
-              controller: emailcon,
-              style: TextStyle(color: white),
-              onChanged: (value) {
-                setState(() {
-                  
-                });
-              },
-            ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          const Text(
-            'Password',
-            style: TextStyle(color: white, fontSize: 20),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.4),
-            child: TextField(
-              controller: passwordcon,
-              style: TextStyle(color: white),
-              obscureText: true,
-              onChanged: (value) {
-                setState(() {
-                  
-                });
-              },
+            padding: EdgeInsets.symmetric(horizontal:  deviceWidth < 700 ?  MediaQuery.of(context).size.width * 0.11 : MediaQuery.of(context).size.width * 0.35),
+            child: Column(
+              children: [
+                ListTile(
+                  title: const Text(
+                    'Email',
+                    style: TextStyle(color: white, fontSize: 20),
+                  ),
+                  subtitle: TextField(
+                    controller: emailcon,
+                    style: TextStyle(color: white),
+                    onChanged: (value) {
+                      setState(() {
+                        
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                ListTile(
+                  title: const Text(
+                    'Password',
+                    style: TextStyle(color: white, fontSize: 20),
+                  ),
+                  subtitle: TextField(
+                    controller: passwordcon,
+                    style: TextStyle(color: white),
+                    obscureText: true,
+                    onChanged: (value) {
+                      setState(() {
+                        
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(
