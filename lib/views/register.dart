@@ -20,7 +20,10 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundClr,
-
+      appBar: AppBar(
+        backgroundColor: backgroundClr,
+        elevation: 0,
+      ),
       body: loading 
       ? Center(
         child: CircularProgressIndicator(),
@@ -82,7 +85,9 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Text('Register', style: TextStyle(color: white),),
             onPressed: () async {
               try {
-                loading = true;
+                setState(() {
+                  loading = true;
+                });
                 var cred =  await FirebaseAuth.instance.createUserWithEmailAndPassword(email: emailcon.text, password: passwordcon.text);
                 if(cred.user != null) {
                   await gptusers.doc(FirebaseAuth.instance.currentUser?.uid).set({
@@ -93,6 +98,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       loading = false;
                     });
                     if(context.mounted){
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Successfully Registered")));
                       Navigator.pop(context);
                     }
                   });
