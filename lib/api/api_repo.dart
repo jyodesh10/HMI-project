@@ -6,19 +6,13 @@ import 'package:gpt_web/constants/constants.dart';
 import 'package:http/http.dart' as http;
 
 class ApiRepo {
-  Future<String> geminiApiPost(String prompt) async {
+  Future<String> geminiApiPost(String prompt, List<Map<String, dynamic>> content) async {
     try {
       final res = await http.post(
         Uri.parse(baseurl),
         body: jsonEncode(
           {
-            "contents": [
-              {
-                "parts": [
-                  {"text": prompt},
-                ],
-              },
-            ],
+            "contents": content
           },
         ) 
       );
@@ -34,23 +28,13 @@ class ApiRepo {
     }
   }
 
-  Future<String> cohereApiPost(String prompt) async {
+  Future<String> cohereApiPost(String prompt, List<Map<String, dynamic>> content) async {
     try {
       final res = await http.post(
         Uri.parse(baseurl2),
         body: jsonEncode(
           {
-            "messages": [
-                {
-                  "role": "user",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": prompt
-                    }
-                  ]
-                }
-              ],
+            "messages": content,
             "temperature": 0.3,
             "model": "command-a-03-2025"
           }

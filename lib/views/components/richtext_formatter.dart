@@ -10,7 +10,7 @@ import 'package:gpt_web/constants/constants.dart';
 //     }
 //   }
   
-  RichText buildFormattedText(String text) {
+  SelectionArea buildFormattedText(String text) {
     List<TextSpan> spans = [];
     // Split by the bold marker '**'
     List<String> parts = text.split('**');
@@ -31,5 +31,5 @@ import 'package:gpt_web/constants/constants.dart';
         ));
       }
     }
-    return RichText(text: TextSpan(children: spans, style: TextStyle(color: white.withValues(alpha:0.8), fontSize: 15)));
+    return SelectionArea(child: SelectableText.rich(TextSpan(children: spans, style: TextStyle(color: white.withValues(alpha:0.8), fontSize: 15))));
   }

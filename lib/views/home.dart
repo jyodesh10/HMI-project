@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,26 +37,49 @@ class _HomeViewState extends State<HomeView> {
   final Duration debounceDuration = Duration(milliseconds: 500);
   List<String> llms = ["Gemini", "Cohere"];
   String selectedLlm = "Gemini";
-
+  List<Map<String, dynamic>> content =[];
 
   runPromptGemini(val) async {
     setState(() {
       loading = true;
     });
-    output = await ApiRepo().geminiApiPost(val);
+    content.add(
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": prompt.text
+          },
+        ],
+      },
+    );
+
+    output = await ApiRepo().geminiApiPost(val, content);
+    content.add({
+        "role": "model",
+        "parts": [
+          {
+            "text": output
+          },
+        ],
+    });
     String historyId = FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc().id;
     history.add({'id': historyId, 'prompt': val, 'output': output, 'rating':0.0});
     setState(() {
       loading = false;
     });
     prompt.clear();
+
     FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc(historyId).set({
       "id": historyId,
       "prompt": history.last['prompt'],
       "output": history.last['output'],
       "selectedLLm": selectedLlm,
       "rating": 0.0,
+
     });
+
+    log(content.toString());
     Future.delayed(Duration(milliseconds: 2), () {
       scrollController.animateTo(scrollController.position.maxScrollExtent, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     });
@@ -65,27 +89,55 @@ class _HomeViewState extends State<HomeView> {
     setState(() {
       loading = true;
     });
-    output = await ApiRepo().cohereApiPost(val);
+    content.add(
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": prompt.text
+          }
+        ]
+      }
+    );
+
+    output = await ApiRepo().cohereApiPost(val, content);
+    content.add({
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": output
+          }
+        ]
+    });
     String historyId = FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc().id;
     history.add({'id': historyId, 'prompt': val, 'output': output, 'rating':0.0});
     setState(() {
       loading = false;
     });
     prompt.clear();
+
     FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc(historyId).set({
       "id": historyId,
       "prompt": history.last['prompt'],
       "output": history.last['output'],
       "selectedLLm": selectedLlm,
       "rating": 0.0,
+
     });
+
+    log(content.toString());
     Future.delayed(Duration(milliseconds: 2), () {
       scrollController.animateTo(scrollController.position.maxScrollExtent, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     });
   }
 
+
+
   clearOutput() {
     output = '';
+    content.clear();
     history.clear();
     prompt.clear();
     setState(() {});
@@ -189,234 +241,236 @@ class _HomeViewState extends State<HomeView> {
                 child: Stack(
                   alignment: Alignment.topRight,
                   children: [
-                    Container(
-                      alignment: Alignment.center,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          loading
-                              ? SizedBox(
-                                  height: deviceHeight * 0.65,
-                                  child: Center(child: CircularProgressIndicator()),
-                                )
-                              : Expanded(
-                                  flex: history.isNotEmpty? 3 : 1,
-                                  child: history.isNotEmpty 
-                                      ? SingleChildScrollView(
-                                        controller: scrollController,
-                                        child: Container(
-                                            margin: EdgeInsets.only(
-                                              top: 70,
-                                              right: deviceWidth * 0.1,
-                                              left: deviceWidth * 0.1,
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: List.generate(history.length, (index) {
-                                                return Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Align(
-                                                      alignment: Alignment.centerRight,
-                                                      child: Container(
-                                                        padding: EdgeInsets.all(10),
-                                                        // margin: EdgeInsets.only(left: deviceWidth * 0.4),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.purple,
-                                                          borderRadius: BorderRadius.circular(20),
-                                                        ),
-                                                        child: Text(history[index]['prompt'], style: TextStyle(color: white),),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 15,
-                                                    ),
-                                                    buildFormattedText(history[index]['output']),
-                                                    Align(
-                                                      alignment: Alignment.centerRight,
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        children: [
-                                                          Text("Rate this response", style: TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w100),),
-                                                          StarRating(
-                                                            rating: double.parse(history[index]['rating'].toString()),
-                                                            mainAxisAlignment: MainAxisAlignment.end,
-                                                            size: 20,
-                                                            starCount: 5,
-                                                            allowHalfRating: false,
-                                                            onRatingChanged: (rating) {
-                                                              FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc(history[index]['id']).update({
-                                                                "rating": rating
-                                                              }).whenComplete(() {
-                                                                setState(() {
-                                                                  history[index]['rating'] = rating;
-                                                                });
-                                                              },);
-                                                            },
-                                                          ),
-                                                        ],
-                                                      )
-                                                    ),
-                                                    SizedBox(
-                                                      height: 50,
-                                                    ),
-                                                  ],
-                                                );
-                                              },),
-                                            ),
-                                          ),
-                                      )
-                                      : Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            GradientText(
-                                              "Hello, ${widget.user.split("@").first}",
-                                              style: TextStyle(
-                                                fontSize: 60,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                              gradient: LinearGradient(
-                                                colors: [cyanC, torquiseT],
-                                                begin: Alignment.centerLeft,
-                                                end: Alignment.centerRight,
-                                                stops: [0.0, 1.0],
-                                              ),
-                                            ),
-                                            SizedBox(height: 20),
-                                            Text(
-                                              "How can we help you today?",
-                                              style: TextStyle(
-                                                color: white.withValues(alpha: 0.8),
-                                                fontWeight: FontWeight.w100,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                ),
-                          output != ""
-                            ? Padding(
-                              padding: EdgeInsets.symmetric(horizontal: deviceWidth*.1 ),
-                              child: ExpansionTile(
-                                title: Text("Suggestions", style: TextStyle(color: white, fontSize: 15),),
-                                iconColor: white,
-                                collapsedIconColor: white,
-                                shape: Border(),
-                                expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                                expandedAlignment: Alignment.centerLeft,
-                                childrenPadding: EdgeInsets.symmetric(horizontal: 20),
-                                children: [
-                                  Wrap(
-                                    runSpacing: 10,
-                                    spacing: 10,
-                                    runAlignment: WrapAlignment.start,
-                                    crossAxisAlignment: WrapCrossAlignment.start,
-                                    children: List.generate(suggestionsList.length, (index) {
-                                      return MaterialButton(
-                                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                        elevation: 1,
-                                        color: white.withValues(alpha: 0.14),
-                                        shape: RoundedSuperellipseBorder(
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Text(suggestionsList[index], style: TextStyle(color: white),),
-                                        onPressed: () {
-                                          prompt.text = "${prompt.text} ${suggestionsList[index]}";
-                                          getsuggestions(prompt.text);
-                                        }
-                                      );
-                                    })
+                    SelectionArea(
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            loading
+                                ? SizedBox(
+                                    height: deviceHeight * 0.65,
+                                    child: Center(child: CircularProgressIndicator()),
                                   )
-                                ],
-                              ),
-                            )
-                            : SizedBox(),   
-                          // textfield
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: output != ''
-                                  ? MainAxisAlignment.end
-                                  : MainAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: deviceWidth * 0.55,
-                                  height: deviceHeight * 0.15,
-                                  child: Shortcuts(
-                                    shortcuts: _shortcuts,
-                                    child: Actions(
-                                      actions: _actions,
-                                      child: TextFormField(
-                                        cursorColor: white.withAlpha(80),
-                                        maxLines:
-                                            null, // Allow unlimited lines, field will grow
-                                        keyboardType: TextInputType.multiline,
-                                        controller: prompt,
-                                        // onFieldSubmitted is no longer needed as Actions handle Enter
-                                        style: TextStyle(color: white),
-                                        minLines: 2,
-                                        onChanged: (value) {
-                                          getsuggestions(value);
-                                        },
-                                        decoration: InputDecoration(
-                                          border: OutlineInputBorder(
+                                : Expanded(
+                                    flex: history.isNotEmpty? 3 : 1,
+                                    child: history.isNotEmpty 
+                                        ? SingleChildScrollView(
+                                          controller: scrollController,
+                                          child: Container(
+                                              margin: EdgeInsets.only(
+                                                top: 70,
+                                                right: deviceWidth * 0.1,
+                                                left: deviceWidth * 0.1,
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: List.generate(history.length, (index) {
+                                                  return Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Align(
+                                                        alignment: Alignment.centerRight,
+                                                        child: Container(
+                                                          padding: EdgeInsets.all(10),
+                                                          // margin: EdgeInsets.only(left: deviceWidth * 0.4),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.purple,
+                                                            borderRadius: BorderRadius.circular(20),
+                                                          ),
+                                                          child: SelectableText(history[index]['prompt'], style: TextStyle(color: white),),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        height: 15,
+                                                      ),
+                                                      buildFormattedText(history[index]['output']),
+                                                      Align(
+                                                        alignment: Alignment.centerRight,
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Text("Rate this response", style: TextStyle(color: white, fontSize: 12, fontWeight: FontWeight.w100),),
+                                                            StarRating(
+                                                              rating: double.parse(history[index]['rating'].toString()),
+                                                              mainAxisAlignment: MainAxisAlignment.end,
+                                                              size: 20,
+                                                              starCount: 5,
+                                                              allowHalfRating: false,
+                                                              onRatingChanged: (rating) {
+                                                                FirebaseFirestore.instance.collection("gptusers").doc(currentUser).collection("history").doc(history[index]['id']).update({
+                                                                  "rating": rating
+                                                                }).whenComplete(() {
+                                                                  setState(() {
+                                                                    history[index]['rating'] = rating;
+                                                                  });
+                                                                },);
+                                                              },
+                                                            ),
+                                                          ],
+                                                        )
+                                                      ),
+                                                      SizedBox(
+                                                        height: 50,
+                                                      ),
+                                                    ],
+                                                  );
+                                                },),
+                                              ),
+                                            ),
+                                        )
+                                        : Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              GradientText(
+                                                "Hello, ${widget.user.split("@").first}",
+                                                style: TextStyle(
+                                                  fontSize: 60,
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                                gradient: LinearGradient(
+                                                  colors: [cyanC, torquiseT],
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  stops: [0.0, 1.0],
+                                                ),
+                                              ),
+                                              SizedBox(height: 20),
+                                              Text(
+                                                "How can we help you today?",
+                                                style: TextStyle(
+                                                  color: white.withValues(alpha: 0.8),
+                                                  fontWeight: FontWeight.w100,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+                            output != ""
+                              ? Padding(
+                                padding: EdgeInsets.symmetric(horizontal: deviceWidth*.1 ),
+                                child: ExpansionTile(
+                                  title: Text("Suggestions", style: TextStyle(color: white, fontSize: 15),),
+                                  iconColor: white,
+                                  collapsedIconColor: white,
+                                  shape: Border(),
+                                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                                  expandedAlignment: Alignment.centerLeft,
+                                  childrenPadding: EdgeInsets.symmetric(horizontal: 20),
+                                  children: [
+                                    Wrap(
+                                      runSpacing: 10,
+                                      spacing: 10,
+                                      runAlignment: WrapAlignment.start,
+                                      crossAxisAlignment: WrapCrossAlignment.start,
+                                      children: List.generate(suggestionsList.length, (index) {
+                                        return MaterialButton(
+                                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                          elevation: 1,
+                                          color: white.withValues(alpha: 0.14),
+                                          shape: RoundedSuperellipseBorder(
                                             borderRadius: BorderRadius.circular(20),
-                                            borderSide: BorderSide(
+                                          ),
+                                          child: Text(suggestionsList[index], style: TextStyle(color: white),),
+                                          onPressed: () {
+                                            prompt.text = "${prompt.text} ${suggestionsList[index]}";
+                                            getsuggestions(prompt.text);
+                                          }
+                                        );
+                                      })
+                                    )
+                                  ],
+                                ),
+                              )
+                              : SizedBox(),   
+                            // textfield
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: output != ''
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: deviceWidth * 0.55,
+                                    height: deviceHeight * 0.15,
+                                    child: Shortcuts(
+                                      shortcuts: _shortcuts,
+                                      child: Actions(
+                                        actions: _actions,
+                                        child: TextFormField(
+                                          cursorColor: white.withAlpha(80),
+                                          maxLines:
+                                              null, // Allow unlimited lines, field will grow
+                                          keyboardType: TextInputType.multiline,
+                                          controller: prompt,
+                                          // onFieldSubmitted is no longer needed as Actions handle Enter
+                                          style: TextStyle(color: white),
+                                          minLines: 2,
+                                          onChanged: (value) {
+                                            getsuggestions(value);
+                                          },
+                                          decoration: InputDecoration(
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                              borderSide: BorderSide(
+                                                color: white.withValues(alpha: 0.7),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                              borderSide: BorderSide(
+                                                color: white.withValues(alpha: 0.4),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            errorBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                              borderSide: BorderSide(
+                                                color: white.withValues(alpha: 0.4),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                              borderSide: BorderSide(
+                                                color: white.withValues(alpha: 0.6),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                            hintText:
+                                                "Ask LLM",
+                                            hintStyle: TextStyle(
                                               color: white.withValues(alpha: 0.7),
-                                              width: 1,
                                             ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            borderSide: BorderSide(
-                                              color: white.withValues(alpha: 0.4),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          errorBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            borderSide: BorderSide(
-                                              color: white.withValues(alpha: 0.4),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                            borderSide: BorderSide(
-                                              color: white.withValues(alpha: 0.6),
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                          hintText:
-                                              "Ask LLM",
-                                          hintStyle: TextStyle(
-                                            color: white.withValues(alpha: 0.7),
-                                          ),
-                                          suffixIcon: IconButton(
-                                            onPressed: () {
-                                              if (prompt.text.trim().isNotEmpty) {
-                                                if(selectedLlm == "Gemini") {
-                                                  runPromptGemini(prompt.text);
-                                                } else {
-                                                  runPromptCohere(prompt.text);
+                                            suffixIcon: IconButton(
+                                              onPressed: () {
+                                                if (prompt.text.trim().isNotEmpty) {
+                                                  if(selectedLlm == "Gemini") {
+                                                    runPromptGemini(prompt.text);
+                                                  } else {
+                                                    runPromptCohere(prompt.text);
+                                                  }
                                                 }
-                                              }
-                                            },
-                                            icon: Icon(Icons.search, color: white),
+                                              },
+                                              icon: Icon(Icons.search, color: white),
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                output != ""
-                                    ? SizedBox(height: 10)
-                                    : SizedBox(height: 50),
-                              ],
+                                  output != ""
+                                      ? SizedBox(height: 10)
+                                      : SizedBox(height: 50),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     Padding(
@@ -462,14 +516,14 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
                     Positioned(
-                      top: 10,
-                      left: 10,
+                      top: 20,
+                      left: deviceWidth < 700 ? 80: 10,
                       // padding: EdgeInsets.all(20.0),
                       child: PopupMenuButton(
                         child: Container(
                           padding: EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.purple,
+                            color: torquiseT,
                             borderRadius: BorderRadius.circular(20)
                           ),
                           child: Text("Select LLM : $selectedLlm", style: TextStyle(fontSize: 15, color: white, fontWeight: FontWeight.w500),)),
@@ -480,7 +534,12 @@ class _HomeViewState extends State<HomeView> {
                                 onTap: () {
                                   setState(() {
                                     debugPrint(e);
-                                    selectedLlm = e.toString();
+                                    if(selectedLlm!=e.toString()){
+                                      content.clear();
+                                      history.clear();
+                                      log("ok");
+                                      selectedLlm = e.toString();
+                                    }
                                   });
                                 },
                               ),
