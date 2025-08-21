@@ -7,7 +7,8 @@ Topic : How do prompt revision and assisted feedback mechanisms influence in imp
 
 ## Features
 
-*   **Gemini API Integration:** Leverages the power of the Gemini API for responses.
+*   **Gemini API Integration:** 
+*   **Cohere API Integration:** 
 *   **Rate Output:** Users can rate the generated output.
 *   **Live Suggestions:** Provides live suggestions as the user types.
 
