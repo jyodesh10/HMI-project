@@ -6,10 +6,10 @@ Topic : How do prompt revision and assisted feedback mechanisms influence in imp
 ](https://hmi-project-final.vercel.app/)
 
 ## Group Members:
-Mohammed Ruzhan Islam 	(1615434)		mohammed.islam@stud.fra-uas.de
-Muhammad Humza Faqi     (1597350)       mohammad.faqi@stud.fra-uas.de
-Abdul Hanan Nawaz	 	(1615054)		abdul.nawaz@stud.fra-uas.de
-Jyodesh Shakya	 	    (1613609)		jyodesh.shakya@stud.fra-uas.de
+* Mohammed Ruzhan Islam   (1615434)		mohammed.islam@stud.fra-uas.de
+* Muhammad Humza Faqi     (1597350)     mohammad.faqi@stud.fra-uas.de
+* Abdul Hanan Nawaz	 	  (1615054)		abdul.nawaz@stud.fra-uas.de
+* Jyodesh Shakya	 	  (1613609)		jyodesh.shakya@stud.fra-uas.de
 
 ## Features
 
