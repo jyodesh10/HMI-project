@@ -26,8 +26,11 @@ Topic : How do prompt revision and assisted feedback mechanisms influence in imp
 
 ## Analysis Data
 
-![Analysis 1](screenshots/analysis1.jpg)
-![Analysis 2](screenshots/analysis2.jpg)
+| Analysis 1  | Analysis 2 |
+| ------------- | ------------- |
+| ![Analysis 1](screenshots/analysis1.jpg)  | ![Analysis 2](screenshots/analysis2.jpg)  |
+
+
 
 
 ## Contributing
